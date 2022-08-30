@@ -1,0 +1,4 @@
+Flask==2.2.*
+Flask-WTF==1.0.*
+libsass-0.21.*
+-e .

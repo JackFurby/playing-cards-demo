@@ -1,0 +1,42 @@
+<html>
+	<head>
+		<link href="{{ url_for('static', filename='css/style.scss.css') }}" rel="stylesheet" type="text/css">
+
+		{% if title %}
+		<title>{{ title }} - Explainable Concept Bottleneck Models demo</title>
+		{% else %}
+		<title>Reporter</title>
+		{% endif %}
+	</head>
+	<body class="bg-light">
+
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category, message in messages %}
+					<div class="alert alert-{{ category }} alert-dismissible fade show rounded-0 mb-0" role="alert">
+						{{ message }}
+						<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+					</div>
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
+
+		<div class="container-fluid">
+			<div class="row main-container">
+
+				{% block sidebar %}
+					{% include "template_parts/sidebar.html" %}
+				{% endblock %}
+
+				{% block content %}{% endblock %}
+
+			</div>
+		</div>
+
+		{% block footer %}
+			{% include "template_parts/footer.html" %}
+		{% endblock %}
+
+		<script type=text/javascript src="{{url_for('static', filename='js/bootstrap/bootstrap.bundle.min.js') }}"></script>
+	</body>
+</html>
