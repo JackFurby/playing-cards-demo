@@ -49,17 +49,24 @@ XtoC_model_2.to(device)
 XtoC_model_3.to(device)
 
 
-def get_camera():
-	camera = iio.get_reader("<video0>")
-	meta = camera.get_meta_data()
-	return camera, meta
+def get_camera(device="<video0>"):
+	"""cv2 works for IP camera but does not release USB cameras.
+	Select libary based on device type
+	"""
+	if device[:4] == "http":
+		camera = cv2.VideoCapture(device)
+		cv2_capture = True
+	else:
+		camera = iio.get_reader(device)
+		cv2_capture = False
+	return camera, cv2_capture
 
 
 def gen_frames():
-	camera, meta = get_camera()
-	delay = 1/meta["fps"]
+	camera, cv2_capture = get_camera(device="http://192.168.0.2/mjpg/video.mjpg")
+	delay = 1 / 30  # 30 fps
 	while True:
-		frame = get_frame(camera)
+		frame = get_frame(camera, cv2_capture)
 		ret, buffer = cv2.imencode('.jpg', frame)
 		frame = buffer.tobytes()
 		time.sleep(delay)
@@ -68,14 +75,17 @@ def gen_frames():
 
 def get_picture():
 	time.sleep(0.3)  # make sure the camera is available (may be used by stream before)
-	camera, meta = get_camera()
-	return get_frame(camera)
+	camera, cv2_capture = get_camera(device="http://192.168.0.2/mjpg/video.mjpg")
+	return get_frame(camera, cv2_capture)
 
 
-def get_frame(camera):
-	frame = camera.get_next_data()
+def get_frame(camera, cv2_capture=False):
+	if cv2_capture:
+		ret, frame = camera.read()
+	else:
+		frame = camera.get_next_data()
+		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 	frame = square_crop(frame)  # discard parts of frame we cannot pass into model
-	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 	return frame
 
 
@@ -145,3 +155,19 @@ def predict(img, concepts=None):
 	_, predicted = task_out.max(1)
 
 	return class_index_to_string(predicted.item()), concept_out
+
+
+def gat_saliency(pred_concepts, saliency ):
+	filter_out = torch.zeros_like(pred_concepts)
+	filter_out[:,i] += 1
+
+	# Get the gradient of each input
+	image_gradient = torch.autograd.grad(
+		pred_concepts,
+		image,
+		grad_outputs=filter_out,
+		retain_graph=True)[0]
+
+
+	attr = heatmap(image_gradient, cmap_name='seismic')
+	return attr
