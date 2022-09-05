@@ -1,0 +1,44 @@
+{% extends "template_parts/base.html" %}
+
+
+{% block content %}
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+	<div class="bg-white p-3 mt-4">
+		<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3">
+			<h1 class="h2">Results</h1>
+		</div>
+		<hr/>
+
+		<div class="row">
+			<h3>Input</h3>
+			<div class="col-xs-10 col-sm-10 col-md-10 col-lg-6 m-auto">
+				<img class="mb-3" src="{{ url_for('demo.upload', filename=input) }}" width="100%">
+			</div>
+			<h3>Outputs</h3>
+			<h4>Classification</h4>
+			<p>{{ task_out }}</p>
+			<h4>Concepts</h4>
+			<form method="post" action="{{ url_for('demo.update_results') }}">
+				<input type="hidden" id="model_input" value="{{ input }}" name="model_input">
+				{% for concept in concepts %}
+					<p>{{concept[1]}} <span class="badge rounded-pill bg-secondary">{{ concept[2]|round(2) }}</span></p>
+					<div class="row">
+						<div class="col-10">
+							<input type="hidden" id="{{ concept[0] }}-initial" value="{{ concept[2] }}">
+							<input type="range" class="form-range" min="0" max="1" step="0.01" value="{{ concept[2] }}" id="{{ concept[0] }}" name="{{ concept[0] }}">
+						</div>
+						<div class="col-2">
+							<button type="button" class="btn btn-secondary" disabled>Reset</button>
+						</div>
+					</div>
+				{% endfor %}
+				<button type="submit" class="btn btn-primary">Re-run concepts</button>
+			</form>
+		</div>
+
+		<br/>
+	</div>
+
+</main>
+
+{% endblock %}

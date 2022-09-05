@@ -1,0 +1,6 @@
+straight_flush 0
+three_of_a_kind 1
+straight 2
+flush 3
+pair 4
+high_card 5

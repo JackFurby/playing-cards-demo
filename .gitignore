@@ -130,3 +130,5 @@ dmypy.json
 
 # extra
 playing_cards_app/static/css/
+playing_cards_app/uploads/
+playing_cards_app/demo/model_saves/

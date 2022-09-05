@@ -1,8 +1,6 @@
 from flask import Flask
 from config import Config
 from sassutils.wsgi import SassMiddleware
-
-
 import playing_cards_app.forms
 
 

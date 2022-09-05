@@ -1,4 +1,10 @@
 Flask==2.2.*
 Flask-WTF==1.0.*
-libsass-0.21.*
+libsass==0.21.*
+opencv-python==4.6.0.*
+imageio_ffmpeg==0.4.*
+-f https://download.pytorch.org/whl/torch_stable.html
+torch==1.12.1+cu113
+torchaudio==0.12.1+cu113
+torchvision==0.13.1+cu113
 -e .
