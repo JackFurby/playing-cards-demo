@@ -9,4 +9,5 @@ torchaudio==0.12.1+cu113
 torchvision==0.13.1+cu113
 matplotlib==3.5.*
 celery==5.2.*
+Redis==4.3.*
 -e .

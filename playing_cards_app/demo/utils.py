@@ -12,6 +12,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+from playing_cards_app import celery
 
 # Global variables and other bits for model
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -180,6 +181,7 @@ def project(X, output_range=(0, 1)):
 	return X
 
 
+@celery.task()
 def gat_saliency(pred_concepts, input, target_id):
 	filter_out = torch.zeros_like(pred_concepts)
 	filter_out[:,target_id] += 1

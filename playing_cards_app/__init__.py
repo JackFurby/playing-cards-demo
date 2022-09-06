@@ -1,7 +1,28 @@
 from flask import Flask
 from config import Config
+from celery import Celery
 from sassutils.wsgi import SassMiddleware
 import playing_cards_app.forms
+
+
+# https://medium.com/@frassetto.stefano/flask-celery-howto-d106958a15fe
+def make_celery(app_name=__name__):
+	redis_uri = 'redis://localhost:6379'
+	return Celery(app_name, backend=redis_uri, broker=redis_uri)
+
+
+celery = make_celery()
+
+
+def init_celery(celery, app):
+	celery.conf.update(app.config)
+	TaskBase = celery.Task
+
+	class ContectTask(TaskBase):
+		def __call__(self, *args, **kwargs):
+			with app.app_context():
+				return TaskBase.__call__(self, *args, **kwargs)
+	celery.Task = ContectTask
 
 
 def create_app(config_class=Config):
@@ -15,6 +36,9 @@ def create_app(config_class=Config):
 		'playing_cards_app': ('static/scss', 'static/css', '/static/css')
 	})
 	app.config.from_object(config_class)
+
+	# backgroud tasks
+	init_celery(celery, app)
 
 	# Dashboard
 	from playing_cards_app.dashboard import bp as dashboard_bp

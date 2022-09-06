@@ -109,7 +109,7 @@ def saliency():
 	global task_out, concepts, input
 
 	target_id = int(request.args.get("target"))
-	saliency_img = gat_saliency(concepts, input, target_id)
+	saliency_img = gat_saliency.delay(concepts, input, target_id)
 
 	plt.xticks([])
 	plt.yticks([])
