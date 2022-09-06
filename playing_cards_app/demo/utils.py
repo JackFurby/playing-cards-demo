@@ -8,6 +8,10 @@ from playing_cards_app.demo.model import End2EndModel
 from playing_cards_app.demo.lrp_converter import convert
 import playing_cards_app.demo.lrp as lrp
 from PIL import Image
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Global variables and other bits for model
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -48,6 +52,8 @@ XtoC_model_1.to(device)
 XtoC_model_2.to(device)
 XtoC_model_3.to(device)
 
+DEVICE = "http://192.168.0.5/mjpg/video.mjpg"
+
 
 def get_camera(device="<video0>"):
 	"""cv2 works for IP camera but does not release USB cameras.
@@ -63,7 +69,7 @@ def get_camera(device="<video0>"):
 
 
 def gen_frames():
-	camera, cv2_capture = get_camera(device="http://192.168.0.2/mjpg/video.mjpg")
+	camera, cv2_capture = get_camera(device=DEVICE)
 	delay = 1 / 30  # 30 fps
 	while True:
 		frame = get_frame(camera, cv2_capture)
@@ -75,7 +81,7 @@ def gen_frames():
 
 def get_picture():
 	time.sleep(0.3)  # make sure the camera is available (may be used by stream before)
-	camera, cv2_capture = get_camera(device="http://192.168.0.2/mjpg/video.mjpg")
+	camera, cv2_capture = get_camera(device=DEVICE)
 	return get_frame(camera, cv2_capture)
 
 
@@ -107,19 +113,14 @@ def square_crop(img):
 	return img[int(y):int(y+new_size), int(x):int(x+new_size)]
 
 
-def predict(img, concepts=None):
+def predict(image, concepts=None):
 
 	# C to Y only
 	if concepts != None:
 		c_to_y_input = torch.FloatTensor(concepts).unsqueeze(0)
-
-		# Get human readable outputs
-		concept_out = []
-		for idx, i in enumerate(concepts):
-			concept_out.append((idx, concept_index_to_string(idx), i))
 	# end to end
 	else:
-		image = Image.open(img).convert('RGBA')
+		image = Image.open(image).convert('RGBA')
 		background = Image.new('RGBA', image.size, (255,255,255))
 		image = Image.alpha_composite(background, image)
 		image = image.convert('RGB')  # ensure image does not have an alpha channel
@@ -143,28 +144,50 @@ def predict(img, concepts=None):
 			c_to_y_input = torch.cat((outputs), dim=1)
 			sig_concepts = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 
-		# Get human readable outputs
-		concept_out = []
-		for idx, i in enumerate(sig_concepts[0]):
-			concept_out.append((idx, concept_index_to_string(idx), i.item()))
-
 	task_out = CtoY(c_to_y_input)
-
-	print(task_out)
 
 	_, predicted = task_out.max(1)
 
-	return class_index_to_string(predicted.item()), concept_out
+	return class_index_to_string(predicted.item()), pred_concepts, image
 
 
-def gat_saliency(pred_concepts, saliency ):
+##### https://github.com/fhvilshoj/TorchLRP/blob/74253a1be05f0be0b7c535736023408670443b6e/examples/visualization.py#L60
+def heatmap(X, cmap_name="seismic"):
+	cmap = plt.cm.get_cmap(cmap_name)
+
+	if X.shape[1] in [1, 3]:  # move channel index to end + convert to np array
+		X = X.permute(0, 2, 3, 1).detach().cpu().numpy()
+	if isinstance(X, torch.Tensor):  # convert tensor to np array
+		X = X.detach().cpu().numpy()
+
+	shape = X.shape
+	tmp = X.sum(axis=-1) # Reduce channel axis
+
+	tmp = project(tmp, output_range=(0, 255)).astype(int)
+	tmp = cmap(tmp.flatten())[:, :3].T
+	tmp = tmp.T
+
+	shape = list(shape)
+	shape[-1] = 3
+	return tmp.reshape(shape).astype(np.float32)
+
+
+def project(X, output_range=(0, 1)):
+	absmax = np.abs(X).max(axis=tuple(range(1, len(X.shape))), keepdims=True)
+	X /= absmax + (absmax == 0).astype(float)
+	X = (X+1) / 2. # range [0, 1]
+	X = output_range[0] + X * (output_range[1] - output_range[0]) # range [x, y]
+	return X
+
+
+def gat_saliency(pred_concepts, input, target_id):
 	filter_out = torch.zeros_like(pred_concepts)
-	filter_out[:,i] += 1
+	filter_out[:,target_id] += 1
 
 	# Get the gradient of each input
 	image_gradient = torch.autograd.grad(
 		pred_concepts,
-		image,
+		input,
 		grad_outputs=filter_out,
 		retain_graph=True)[0]
 

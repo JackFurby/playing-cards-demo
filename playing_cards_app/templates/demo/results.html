@@ -21,7 +21,7 @@
 			<form method="post" action="{{ url_for('demo.update_results') }}">
 				<input type="hidden" id="model_input" value="{{ input }}" name="model_input">
 				{% for concept in concepts %}
-					<p>{{concept[1]}} <span class="badge rounded-pill bg-secondary">{{ concept[2]|round(2) }}</span></p>
+					<p>{{ concept[1] }} <span class="badge rounded-pill bg-secondary">{{ concept[2]|round(2) }}</span></p>
 					<div class="row">
 						<div class="col-10">
 							<input type="hidden" id="{{ concept[0] }}-initial" value="{{ concept[2] }}">
@@ -34,6 +34,13 @@
 				{% endfor %}
 				<button type="submit" class="btn btn-primary">Re-run concepts</button>
 			</form>
+			<h4>Saliency maps</h4>
+			{% for concept in concepts %}
+			<p>{{ concept[1] }}</p>
+			<div class="col-xs-10 col-sm-10 col-md-10 col-lg-6 m-auto">
+				<img class="mb-3" src="{{ url_for('demo.saliency', target=concept[0]) }}" width="100%">
+			</div>
+			{% endfor %}
 		</div>
 
 		<br/>
