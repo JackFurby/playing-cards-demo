@@ -21,7 +21,7 @@
 						<button type="submit" class="btn btn-outline-primary" name="submit"><i class="bi-image"></i> Upload image</button>
 					</form>
 				{% elif image == "picture" or image == "upload" %}
-					<img class="mb-3" src="{{ url_for('demo.upload', filename=name) }}" width="100%">
+					<img class="mb-3" src="{{ url_for('demo.get_image', filename=name) }}" width="100%">
 					<form method="post" action="{{ url_for('demo.demo') }}">
 						<button type="submit" class="btn btn-outline-primary" name="submit" value="reset"><i class="bi-arrow-counterclockwise"></i> Select differnt input</button>
 					</form>
