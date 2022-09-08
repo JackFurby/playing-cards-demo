@@ -77,7 +77,7 @@ def update_results():
 	task_out, new_concepts = CURRENT_MODEL.predict(concepts=new_concepts)
 	concept_out = CURRENT_MODEL.get_readable_concepts(new_concepts)
 
-	return render_template('demo/results.html', title='Results', input=input_name, concepts=concept_out, task_out=task_out)
+	return render_template('demo/results.html', title='Results', input=CURRENT_MODEL.input_name, concepts=concept_out, task_out=task_out)
 
 
 @bp.route('/saliency', methods=['GET'])

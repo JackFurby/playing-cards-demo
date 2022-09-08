@@ -87,7 +87,7 @@ class Model():
 
 		# C to Y only
 		if concepts != None:
-			c_to_y_input = torch.FloatTensor(concepts).unsqueeze(0)
+			c_to_y_input = torch.FloatTensor(concepts).unsqueeze(0).to(self.device)
 		# End to end
 		else:
 			# Transform image and prepare for input to model
@@ -130,9 +130,11 @@ class Model():
 			**kwargs: additional variables which are passed directly to save_image()
 		"""
 		self.thread.acquire()  # add lock to avoid CUDA out of memory error
-		attr = get_saliency(self.pred_concepts, self.transformed_input, concept_id, cmap_name=cmap)
 		filename = f"{concept_id}_{self.input_name}"
-		save_image(filename=filename, img=attr.squeeze(), type="plt", **kwargs)
+		# Only generate saliency map if it does not already exist
+		if os.path.exists(f"{os.path.dirname(self.input_path)}/{filename}") == False:
+			attr = get_saliency(self.pred_concepts, self.transformed_input, concept_id, cmap_name=cmap)
+			save_image(filename=filename, img=attr.squeeze(), type="plt", **kwargs)
 		self.thread.release()
 
 		return filename
