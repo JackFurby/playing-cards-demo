@@ -38,7 +38,7 @@
 			{% for concept in concepts %}
 			<p>{{ concept[1] }}</p>
 			<div class="col-xs-10 col-sm-10 col-md-10 col-lg-6 m-auto">
-				<img class="mb-3" src="{{ url_for('demo.get_image', filename=concept[0]|string + '_' + input) }}" width="100%">
+				<img class="mb-3" src="{{ url_for('demo.saliency', target=concept[0]) }}" width="100%">
 			</div>
 			{% endfor %}
 		</div>

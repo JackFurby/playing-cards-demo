@@ -9,10 +9,19 @@ from playing_cards_app import celery
 
 
 def get_camera(device="<video0>"):
-	"""cv2 works for IP camera but does not release USB cameras.
-	Select libary based on device type
 	"""
-	print(device)
+	Initilises and returns a camera
+
+	Note: cv2 works for IP camera but does not release USB cameras. The libary
+	is selected based on device type
+
+	args:
+		device (string): name for device e.g. <video0> or URL
+
+	return:
+		camera (cv2.VideoCapture or imageio reader): capture object
+		cv2_capture (bool): True if cv2 is used, else False
+	"""
 	if device[:4] == "http":
 		camera = cv2.VideoCapture(device)
 		cv2_capture = True
@@ -23,6 +32,15 @@ def get_camera(device="<video0>"):
 
 
 def gen_frames(device):
+	"""
+	Returns a stream of video frames
+
+	args:
+		device (string): name for device e.g. <video0> or URL
+
+	return:
+		Video stream
+	"""
 	camera, cv2_capture = get_camera(device=device)
 	delay = 1 / 30  # 30 fps
 	while True:
@@ -34,12 +52,31 @@ def gen_frames(device):
 
 
 def get_picture(device):
+	"""
+	Returns a single image from camera
+
+	args:
+		device (string): name for device e.g. <video0> or URL
+
+	return:
+		image as cv2 array
+	"""
 	time.sleep(0.3)  # make sure the camera is available (may be used by stream before taking picture)
 	camera, cv2_capture = get_camera(device=device)
 	return get_frame(camera, cv2_capture)
 
 
 def get_frame(camera, cv2_capture=False):
+	"""
+	Returns a single image (frame) from camera
+
+	args:
+		device (string): name for device e.g. <video0> or URL
+		cv2_capture (bool): True if cv2 is used, else False
+
+	return:
+		frame as cv2 array
+	"""
 	if cv2_capture:
 		ret, frame = camera.read()
 	else:
@@ -52,6 +89,12 @@ def get_frame(camera, cv2_capture=False):
 def square_crop(img):
 	"""
 	Apply a square crop to a given image. The crop will also be a center crop
+
+	args:
+		img (cv2 array)
+
+	return:
+		image (cv2 array)
 	"""
 
 	height, width, channels = img.shape
@@ -67,7 +110,6 @@ def square_crop(img):
 	return img[int(y):int(y+new_size), int(x):int(x+new_size)]
 
 
-@celery.task()
 def save_image(filename, img, file_exts, folder, type, cmap="seismic"):
 	""" Save a given image
 	args:

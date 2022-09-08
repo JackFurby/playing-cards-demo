@@ -2,7 +2,7 @@ from flask import Flask, request, Response, flash, make_response, current_app, s
 from flask import render_template, url_for, redirect
 from playing_cards_app.demo import bp
 from playing_cards_app.demo.utils import gen_frames, get_picture, save_image
-from playing_cards_app.demo.predictions import predict, get_saliency, get_readable_concepts
+from playing_cards_app.demo.predictions import Model
 import cv2
 from datetime import datetime
 import os
@@ -13,6 +13,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import torch
 from playing_cards_app.demo.data.utils import IndexToString
+
+
+CURRENT_MODEL = Model()
 
 
 @bp.route('/demo', methods=["GET", "POST"])
@@ -29,7 +32,9 @@ def demo():
 @bp.route('/upload_file/', methods=['POST'])
 def upload_files():
 	uploaded_file = request.files['image_file']
+	print(uploaded_file)
 	filename = secure_filename(uploaded_file.filename)
+	print(filename, "this")
 	save_image(filename, uploaded_file, file_exts=current_app.config['UPLOAD_EXTENSIONS'], folder=current_app.config['UPLOAD_FOLDER'], type="upload")
 	image = "upload"
 	name = filename
@@ -58,19 +63,27 @@ def get_image(filename):
 @bp.route('/results', methods=['POST'])
 def results():
 	input_name = request.form["model_input"]
-	task_out, concepts = predict(os.path.join("playing_cards_app", current_app.config['UPLOAD_FOLDER'], input_name), gen_salience=True, input_name=input_name, file_exts=current_app.config['UPLOAD_EXTENSIONS'], folder=current_app.config['UPLOAD_FOLDER'])
+	CURRENT_MODEL.set_input(os.path.join("playing_cards_app", current_app.config['UPLOAD_FOLDER'], input_name))
+	task_out, concepts = CURRENT_MODEL.predict()
 
-	concept_out = get_readable_concepts(concepts)  # Get human readable outputs
+	concept_out = CURRENT_MODEL.get_readable_concepts(concepts)  # Get human readable outputs
 	return render_template('demo/results.html', title='Results', input=input_name, task_out=task_out, concepts=concept_out)
 
 
 @bp.route('/update_results', methods=['POST'])
 def update_results():
-	global task_out, concepts, input
-	input_name = request.form["model_input"]
 	# model_input is not included in the new concept vector
 	new_concepts = [float(request.form.get(x)) if x != "model_input" else None for x in request.form][1:]
-	task_out, new_concepts = predict(os.path.join("playing_cards_app", current_app.config['UPLOAD_FOLDER'], input_name), concepts=new_concepts, gen_salience=False, input_name=input_name)
-	concept_out = get_readable_concepts(new_concepts)
+	task_out, new_concepts = CURRENT_MODEL.predict(concepts=new_concepts)
+	concept_out = CURRENT_MODEL.get_readable_concepts(new_concepts)
 
 	return render_template('demo/results.html', title='Results', input=input_name, concepts=concept_out, task_out=task_out)
+
+
+@bp.route('/saliency', methods=['GET'])
+def saliency():
+
+	target_id = int(request.args.get("target"))
+	filename = CURRENT_MODEL.gen_saliency(target_id, file_exts=current_app.config['UPLOAD_EXTENSIONS'], folder=current_app.config['UPLOAD_FOLDER'])
+
+	return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
