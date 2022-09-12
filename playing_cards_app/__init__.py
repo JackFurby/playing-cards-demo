@@ -4,6 +4,8 @@ from celery import Celery
 from sassutils.wsgi import SassMiddleware
 import playing_cards_app.forms
 
+import logging
+
 
 # https://medium.com/@frassetto.stefano/flask-celery-howto-d106958a15fe
 def make_celery(app_name=__name__):
