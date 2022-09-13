@@ -8,12 +8,6 @@ from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import torch
-from playing_cards_app.demo.data.utils import IndexToString
-
 
 CURRENT_MODEL = Model()
 
@@ -23,22 +17,31 @@ def demo():
 	if request.method == 'GET' or request.form["submit"] == "reset":
 		image = None
 		name = None
+		examples = os.listdir(os.path.join("playing_cards_app", "static", "examples"))
 	else:  # POST
 		image = request.form["submit"]
 		name = take_picture()
-	return render_template('demo/demo.html', title='Demo', image=image, name=name)
+		examples = None
+	return render_template('demo/demo.html', title='Demo', image=image, name=name, examples=examples)
 
 
 @bp.route('/upload_file/', methods=['POST'])
 def upload_files():
-	uploaded_file = request.files['image_file']
-	print(uploaded_file)
-	filename = secure_filename(uploaded_file.filename)
-	print(filename, "this")
-	save_image(filename, uploaded_file, file_exts=current_app.config['UPLOAD_EXTENSIONS'], folder=current_app.config['UPLOAD_FOLDER'], type="upload")
+	# Selecting examples from examples folder
+	if "image_file" in request.form and isinstance(request.form["image_file"], str):
+		uploaded_file = cv2.imread(f"{os.path.join('playing_cards_app', 'static', 'examples',request.form['image_file'])}")
+		print(f"{os.path.join('playing_cards_app', 'static', request.form['image_file'])}")
+		filename = secure_filename(request.form["image_file"])
+		save_image(filename, uploaded_file, file_exts=current_app.config['UPLOAD_EXTENSIONS'], folder=current_app.config['UPLOAD_FOLDER'], type="cv2")
+	# uploading file from users device
+	else:
+		uploaded_file = request.files['image_file']
+		print(type(uploaded_file))
+		filename = secure_filename(uploaded_file.filename)
+		save_image(filename, uploaded_file, file_exts=current_app.config['UPLOAD_EXTENSIONS'], folder=current_app.config['UPLOAD_FOLDER'], type="upload")
 	image = "upload"
 	name = filename
-	return render_template('demo/demo.html', title='Demo', image=image, name=name)
+	return render_template('demo/demo.html', title='Demo', image=image, name=name, examples=None)
 
 
 @bp.route('/video_feed')

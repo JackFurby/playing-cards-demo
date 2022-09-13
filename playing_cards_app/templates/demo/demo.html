@@ -16,21 +16,38 @@
 					<form method="post" action="{{ url_for('demo.demo') }}">
 						<button type="submit" class="btn btn-outline-primary" name="submit" value="picture"><i class="bi-camera-fill"></i> Take picture</button>
 					</form>
+					<hr />
 					<form method="post" action="{{ url_for('demo.upload_files') }}" enctype="multipart/form-data">
 						<p><input type="file" class="form-control" name="image_file" accept="image/*" required></p>
 						<button type="submit" class="btn btn-outline-primary" name="submit"><i class="bi-image"></i> Upload image</button>
 					</form>
 				{% elif image == "picture" or image == "upload" %}
 					<img class="mb-3" src="{{ url_for('demo.get_image', filename=name) }}" width="100%">
-					<form method="post" action="{{ url_for('demo.demo') }}">
-						<button type="submit" class="btn btn-outline-primary" name="submit" value="reset"><i class="bi-arrow-counterclockwise"></i> Select differnt input</button>
-					</form>
 					<form method="post" action="{{ url_for('demo.results') }}">
 						<input type="hidden" name="model_input" value="{{ name }}">
-						<button type="submit" class="btn btn-outline-primary" name="submit"><i class="bi-check-circle-fill"></i> Submit image</button>
+						<button type="submit" class="btn btn-outline-success" name="submit"><i class="bi-check-circle-fill"></i> Submit image</button>
+					</form>
+					<form method="post" action="{{ url_for('demo.demo') }}">
+						<button type="submit" class="btn btn-outline-danger" name="submit" value="reset"><i class="bi-arrow-counterclockwise"></i> Select differnt input</button>
 					</form>
 				{% endif %}
 			</div>
+			{% if examples != None %}
+			<div class="col-12">
+				<h2>Example images</h2>
+				<hr/>
+				<div class="row">
+					{% for example in examples %}
+					<form method="post" class="col-xs-12 col-sm-6 col-md-4 col-lg-3" action="{{ url_for('demo.upload_files') }}" enctype="multipart/form-data">
+						<input type="hidden" class="form-control" name="image_file" value={{ example }}>
+						<button type="submit" class="mb-3 p-0 border-0" name="submit">
+							<img type="submit" class="" src="{{ url_for('static', filename='examples/' + example) }}" width="100%">
+						</button>
+					</form>
+					{% endfor %}
+				</div>
+			</div>
+			{% endif %}
 		</div>
 
 		<br/>
