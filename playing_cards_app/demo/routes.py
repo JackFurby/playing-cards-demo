@@ -67,20 +67,20 @@ def get_image(filename):
 def results():
 	input_name = request.form["model_input"]
 	CURRENT_MODEL.set_input(os.path.join("playing_cards_app", current_app.config['UPLOAD_FOLDER'], input_name))
-	task_out, concepts = CURRENT_MODEL.predict()
+	CURRENT_MODEL.predict()
+	task_out, task_desc, concept_out, indexed_concepts = CURRENT_MODEL.get_results(sort=current_app.config['CONCEPT_SORT'])
 
-	concept_out = CURRENT_MODEL.get_readable_concepts(concepts)  # Get human readable outputs
-	return render_template('demo/results.html', title='Results', input=input_name, task_out=task_out, concepts=concept_out)
+	return render_template('demo/results.html', title='Results', input=input_name, task_out=task_out, task_desc=task_desc, concepts=concept_out, indexed_concepts=indexed_concepts)
 
 
 @bp.route('/update_results', methods=['POST'])
 def update_results():
 	# model_input is not included in the new concept vector
 	new_concepts = [float(request.form.get(x)) if x != "model_input" else None for x in request.form][1:]
-	task_out, new_concepts = CURRENT_MODEL.predict(concepts=new_concepts)
-	concept_out = CURRENT_MODEL.get_readable_concepts(new_concepts)
+	CURRENT_MODEL.predict(concepts=new_concepts)
+	task_out, task_desc, concept_out, indexed_concepts = CURRENT_MODEL.get_results(sort=current_app.config['CONCEPT_SORT'])
 
-	return render_template('demo/results.html', title='Results', input=CURRENT_MODEL.input_name, concepts=concept_out, task_out=task_out)
+	return render_template('demo/results.html', title='Results', input=CURRENT_MODEL.input_name, concepts=concept_out, task_desc=task_desc, task_out=task_out, indexed_concepts=indexed_concepts)
 
 
 @bp.route('/saliency', methods=['GET'])

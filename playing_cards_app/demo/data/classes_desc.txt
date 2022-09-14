@@ -1,0 +1,6 @@
+Hand contains three suited cards in sequence 0
+Hand contains three cards of the same rank 1
+Hand contains three cards in sequence 2
+Hand contains three cards of the same suit 3
+Hand contains two cards of the same rank 4
+Hand does not contain two or more cards of the same rank, three cards in sequence or three cards of the same suit 5

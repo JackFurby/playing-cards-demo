@@ -14,7 +14,8 @@ class IndexToString(object):
 			lines = f.readlines()
 			for i in lines:
 				i = i.split(" ")
-				self.string_dict[int(i[1])] = i[0]
+				key = i.pop()
+				self.string_dict[int(key)] = ' '.join(i)
 
 	def __call__(self, index):
 		"""

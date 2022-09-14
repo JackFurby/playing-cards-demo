@@ -6,3 +6,4 @@ class Config(object):
 	UPLOAD_EXTENSIONS = ['.jpg', '.png']
 	UPLOAD_FOLDER = "uploads"
 	CAMERA = "http://192.168.0.5/mjpg/video.mjpg"
+	CONCEPT_SORT = "concept"

@@ -1,4 +1,5 @@
 import torch
+from torch.functional import F
 from playing_cards_app.demo.data.utils import IndexToString, Transform
 from playing_cards_app.demo.model import End2EndModel
 from playing_cards_app.demo.lrp_converter import convert
@@ -9,8 +10,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-
 import threading
+
 
 class Model():
 	def __init__(
@@ -20,7 +21,9 @@ class Model():
 		n_concepts=52,
 		n_classes=6,
 		concept_index_to_string="./playing_cards_app/demo/data/concepts.txt",
+		concept_index_to_full_name="./playing_cards_app/demo/data/concepts_full_names.txt",
 		class_index_to_string="./playing_cards_app/demo/data/classes.txt",
+		class_index_to_description="./playing_cards_app/demo/data/classes_desc.txt",
 		img_transform=Transform(),
 		XtoCtoY_path="./playing_cards_app/demo/model_saves/XtoCtoY_converted.pth"
 		):
@@ -29,6 +32,8 @@ class Model():
 		self.use_sig = use_sig
 		self.concept_index_to_string = IndexToString(concept_index_to_string)
 		self.class_index_to_string = IndexToString(class_index_to_string)
+		self.class_index_to_description = IndexToString(class_index_to_description)
+		self.concept_index_to_full_name = IndexToString(concept_index_to_full_name)
 		self.img_transform = img_transform
 
 		self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -64,12 +69,13 @@ class Model():
 
 		self.CtoY = XtoCtoY.c_to_y_model.to(self.device)
 
-		self.raw_input = None
-		self.transformed_input = None
-		self.input_name = None
-		self.input_path = None
-		self.pred_concepts = None
-		self.task_out = None
+		self.raw_input = None  # unultered input image
+		self.transformed_input = None  # input image with a transformation
+		self.input_name = None  # file name of input image
+		self.input_path = None  # path to input image
+		self.pred_concepts = None  # X to C model part output
+		self.task_out = None  # C to Y model part output
+		self.concepts = None  # concept out (after sigmoid or intevention)
 
 		self.thread = threading.Semaphore()
 
@@ -79,10 +85,6 @@ class Model():
 
 		args:
 			concepts (None / list of floats): List of concepts (only used for C to Y / interveneing)
-
-		return:
-			task prediction (string): task class predicted
-			concepts (list of floats): list with concept predictions
 		"""
 
 		# C to Y only
@@ -114,11 +116,47 @@ class Model():
 
 			concepts = sig_concepts[0].tolist()
 
+		self.concepts = concepts
+
 		self.task_out = self.CtoY(c_to_y_input)
+
+	def get_results(self, sort="index"):
+		""" Return model outputs and string conversion
+
+		args:
+			sort (string): how the concepts should be sorted
+				options:
+					index: sorted by concept index (0 first)
+					softmax: sorted by softmax value (highest first)
+					concept: sorted by concept value (highest first)
+
+		returns:
+			task prediction string: string name for task prediction
+			task prediction description: description of task prediction
+			concept_out (list of tuples): list of concept predictions in the form
+				(concept ID, concept string, concept value, concept name, concept softmax score)
+		"""
 
 		_, predicted = self.task_out.max(1)
 
-		return self.class_index_to_string(predicted.item()), concepts
+		softmax_score = F.softmax(self.pred_concepts, dim=-1)
+
+		concept_out = []
+		for idx, i in enumerate(self.concepts):
+			concept_out.append((idx, self.concept_index_to_string(idx), i, self.concept_index_to_full_name(idx), softmax_score[0][idx].item()))
+
+		indexed_concepts = [(x[0], x[1], x[2]) for x in concept_out]  # concept index, string and value in order of index
+
+		print(sort, "£hsfdhisfdhiosfdio")
+
+		if sort == "index":
+			pass  # no need to sort
+		elif sort == "softmax":
+			sorted_concept_out = sorted(concept_out, key=lambda tup: tup[4], reverse=True)
+		elif sort == "concept":
+			sorted_concept_out = sorted(concept_out, key=lambda tup: tup[2], reverse=True)
+
+		return self.class_index_to_string(predicted.item()), self.class_index_to_description(predicted.item()), sorted_concept_out, indexed_concepts
 
 	def gen_saliency(self, concept_id, cmap="seismic", **kwargs):
 		"""
@@ -138,23 +176,6 @@ class Model():
 		self.thread.release()
 
 		return filename
-
-	def get_readable_concepts(self, concept_vec):
-		"""
-		Return a list of concept prediction in a readable datastructure
-
-		args:
-			concept_vec (list of floats): list of floats. Each item should be indexed to match concept indexes
-
-		return:
-			concept_out (list of tuples): list of concept predictions in the form
-				(concept ID, concept string, concept value)
-
-		"""
-		concept_out = []
-		for idx, i in enumerate(concept_vec):
-			concept_out.append((idx, self.concept_index_to_string(idx), i))
-		return concept_out
 
 	def set_input(self, path):
 		"""

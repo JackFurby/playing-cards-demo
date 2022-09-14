@@ -130,6 +130,7 @@ def save_image(filename, img, file_exts, folder, type, cmap="seismic"):
 	elif type == "plt":
 		plt.xticks([])
 		plt.yticks([])
+		plt.box(False)
 		plt.imshow(img, cmap=cmap)
-		plt.savefig(os.path.join("playing_cards_app", folder, filename))
+		plt.savefig(os.path.join("playing_cards_app", folder, filename), bbox_inches='tight', pad_inches=0)
 		plt.close()

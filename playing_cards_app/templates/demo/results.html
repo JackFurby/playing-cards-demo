@@ -13,58 +13,224 @@
 
 			<div class="row">
 				<div class="col-6">
-					<div class="col-xs-12 col-sm-10 col-md-8 col-lg-6 m-sm-auto m-md-0">
-						<img class="mb-3" src="{{ url_for('demo.get_image', filename=input) }}" width="100%">
+					<div class="row">
+						<div class="col-6">
+							<div class="col-12 m-sm-auto m-md-0">
+								<img class="mb-3" src="{{ url_for('demo.get_image', filename=input) }}" width="100%">
+							</div>
+						</div>
+						<div class="col-6">
+							<div id="carouselExampleIndicators" class="carousel carousel-dark slide" data-interval="false">
+								<div class="carousel-indicators">
+									{% set concept_count = namespace(value=0) %}
+									{% for concept in concepts %}
+										{% if concept[2] > 0.5 %}
+											{% if concept_count.value == 0 %}
+												<button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="{{concept_count.value}}" class="active" aria-current="true" aria-label="Slide {{concept_count.value+1}}"></button>
+											{% else %}
+												<button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="{{concept_count.value}}" aria-label="Slide {{concept_count.value+1}}"></button>
+											{% endif %}
+											{% set concept_count.value = concept_count.value + 1 %}
+										{% endif %}
+									{% endfor %}
+								</div>
+								<div class="carousel-inner">
+									{% set concept_count = namespace(value=0) %}
+									{% for concept in concepts %}
+										{% if concept[2] > 0.5 %}
+											{% if concept_count.value == 0 %}
+												<div class="carousel-item active">
+													<img src="{{ url_for('demo.saliency', target=concept[0]) }}" class="d-block w-100" alt="{{ concept[3] }}">
+													<div class="carousel-caption d-none d-md-block">
+														<h5>{{ concept[3] }}</h5>
+													</div>
+												</div>
+											{% else %}
+												<div class="carousel-item">
+													<img src="{{ url_for('demo.saliency', target=concept[0]) }}" class="d-block w-100" alt="{{ concept[3] }}">
+													<div class="carousel-caption d-none d-md-block">
+														<h5>{{ concept[3] }}</h5>
+													</div>
+												</div>
+											{% endif %}
+											{% set concept_count.value = concept_count.value + 1 %}
+										{% endif %}
+									{% endfor %}
+								</div>
+								<button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+									<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+									<span class="visually-hidden">Previous</span>
+								</button>
+								<button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+									<span class="carousel-control-next-icon" aria-hidden="true"></span>
+									<span class="visually-hidden">Next</span>
+								</button>
+							</div>
+						</div>
 					</div>
 				</div>
 				<div class="col-6">
-					<h3>Hand rank</h3>
-					<p class="h4">{{ task_out }}</p>
+					<div class="card">
+						<div class="card-header">
+							<h3 class="card-title mb-0">Hand rank</h3>
+						</div>
+						<div class="card-body">
+							<p class="card-text h4">{{ task_out }} <i class="bi bi-info-circle-fill text-secondary" title="{{ task_desc }}"></i></p>
+						</div>
+					</div>
 				</div>
 			</div>
 			<h4>Present cards</h4>
 			<div class="row">
-				{% for concept in concepts %}
-					{% if concept[2] > 0.5 %}
-						<img class="col-1 mb-3 present" alt="{{ concept[1] }}" src="{{ url_for('static', filename='playing_cards/' + concept[1] + '.png') }}" width="100%">
-					{% else %}
-						<img class="col-1 mb-3 not-present" alt="{{ concept[1] }}" src="{{ url_for('static', filename='playing_cards/' + concept[1] + '.png') }}" width="100%">
-					{% endif %}
+				{% for i_concept in indexed_concepts %}
+					<button class="col-xs-4 col-sm-3 col-md-1 mb-3 border-0 playing_card_btn" onclick="toggleConceptSelect(this, {{ i_concept[0] }})">
+						{% if i_concept[2] > 0.5 %}
+							<img class="present w-100" alt="{{ i_concept[1] }}" src="{{ url_for('static', filename='playing_cards/' + i_concept[1] + '.png') }}" id="{{ i_concept[0] }}-img" width="100%">
+						{% else %}
+							<img class="not-present w-100" alt="{{ i_concept[1] }}" src="{{ url_for('static', filename='playing_cards/' + i_concept[1] + '.png') }}" id="{{ i_concept[0] }}-img" width="100%">
+						{% endif %}
+					</button>
 				{% endfor %}
 			</div>
-			<a class="btn btn-primary" data-bs-toggle="collapse" href="#intevention" role="button" aria-expanded="false" aria-controls="intevention">
-				Link with href
-			</a>
-			<div class="collapse" id="intevention">
-				<h4>Concepts</h4>
-				<form method="post" action="{{ url_for('demo.update_results') }}">
+			<form method="post" action="{{ url_for('demo.update_results') }}">
+				<div class="collapse" id="intevention">
 					<input type="hidden" id="model_input" value="{{ input }}" name="model_input">
 					{% for concept in concepts %}
-						<p>{{ concept[1] }} <span class="badge rounded-pill bg-secondary">{{ concept[2]|round(2) }}</span></p>
+						<p>{{ concept[3] }} <span class="badge rounded-pill bg-secondary" id="{{ concept[0] }}-badge">{{ concept[2]|round(2) }}</span></p>
 						<div class="row">
 							<div class="col-10">
-								<input type="hidden" id="{{ concept[0] }}-initial" value="{{ concept[2] }}">
-								<input type="range" class="form-range" min="0" max="1" step="0.01" value="{{ concept[2] }}" id="{{ concept[0] }}" name="{{ concept[0] }}">
+								<input type="hidden" id="{{ concept[0] }}-initial" value="{{ concept[2]|round(2) }}">
+								<input type="range" class="form-range" min="0" max="1" step="0.01" value="{{ concept[2]|round(2) }}" id="{{ concept[0] }}" name="{{ concept[0] }}" onchange="enableBtn('{{ concept[0] }}-reset'); updateValue('{{ concept[0] }}')">
 							</div>
 							<div class="col-2">
-								<button type="button" class="btn btn-secondary" disabled>Reset</button>
+								<button type="button" class="btn btn-secondary" onclick="resetValue({{ concept[0] }})" id="{{ concept[0] }}-reset" disabled>Reset</button>
 							</div>
 						</div>
 					{% endfor %}
-					<button type="submit" class="btn btn-primary">Re-run concepts</button>
-				</form>
+				</div>
+				<div class="text-center">
+				<button type="submit" class="btn btn-primary">Re-run concepts</button>
+				</div>
+			</form>
+			<div class="text-center">
+				<a class="btn btn-info mb-3" data-bs-toggle="collapse" href="#intevention" role="button" aria-expanded="false" aria-controls="intevention">
+					Toggle concept details
+				</a>
 			</div>
-			<h4>Saliency maps</h4>
-			{% for concept in concepts %}
-			<p>{{ concept[1] }}</p>
-			<div class="col-xs-10 col-sm-10 col-md-10 col-lg-6 m-auto">
-				<img class="mb-3" src="{{ url_for('demo.saliency', target=concept[0]) }}" width="100%">
+			<h4>Saliency maps <i class="bi bi-info-circle-fill text-secondary" title="A saliency map is a heat map showing positive contribution in read and negative contribution in blue"></i></h4>
+
+			{% set concept_slice = 5 %}
+			<div class="accordion" id="saliency_maps">
+				<div class="accordion-item">
+					<h2 class="accordion-header" id="top_saliency">
+						<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#top_collapse" aria-expanded="true" aria-controls="top_collapse">
+							Top {{ concept_slice }} concepts
+						</button>
+					</h2>
+					<div id="top_collapse" class="accordion-collapse collapse show" aria-labelledby="top_saliency" data-bs-parent="#saliency_maps">
+						<div class="accordion-body row">
+							{% for concept in concepts[0:concept_slice] %}
+								<div class="col-xs-2 col-sm-6 col-md-4 col-lg-3 m-auto">
+									<p>{{ concept[3] }}</p>
+									<img class="mb-3" src="{{ url_for('demo.saliency', target=concept[0]) }}" width="100%">
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+				<div class="accordion-item">
+					<h2 class="accordion-header" id="bottom_saliency">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bottom_collapse" aria-expanded="false" aria-controls="bottom_collapse">
+							Bottom {{ concept_slice }} concepts
+						</button>
+					</h2>
+					<div id="bottom_collapse" class="accordion-collapse collapse" aria-labelledby="bottom_saliency" data-bs-parent="#saliency_maps">
+						<div class="accordion-body row">
+							{% for concept in concepts[-concept_slice:] %}
+								<div class="col-xs-2 col-sm-6 col-md-4 col-lg-3 m-auto">
+									<p>{{ concept[3] }}</p>
+									<img class="mb-3" src="{{ url_for('demo.saliency', target=concept[0]) }}" width="100%">
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+				<div class="accordion-item">
+					<h2 class="accordion-header" id="all_saliency">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#all_collapse" aria-expanded="false" aria-controls="all_collapse">
+							All concepts
+						</button>
+					</h2>
+					<div id="all_collapse" class="accordion-collapse collapse" aria-labelledby="all_saliency" data-bs-parent="#saliency_maps">
+						<div class="accordion-body row">
+							{% for concept in concepts %}
+								<div class="col-xs-2 col-sm-6 col-md-4 col-lg-3 m-auto">
+									<p>{{ concept[3] }}</p>
+									<img class="mb-3" src="{{ url_for('demo.saliency', target=concept[0]) }}" width="100%">
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
 			</div>
-			{% endfor %}
 		</div>
 
 		<br/>
 	</div>
+
+	<script type="text/javascript">
+		// reset concept value to initial on button click
+		function resetValue(input_id) {
+			initial_value = document.getElementById(input_id + "-initial").value;
+			document.getElementById(input_id).value = initial_value;
+			document.getElementById(input_id + "-reset").disabled = true;
+			document.getElementById(input_id + "-badge").innerHTML = initial_value;
+			updateImgColour(input_id + "-img", initial_value)
+		};
+
+		// enabe reset button
+		function enableBtn(btn_id) {
+			document.getElementById(btn_id).disabled = false;
+		};
+
+		// update readout for slider value and update concept image
+		function updateValue(input_id) {
+			new_value = document.getElementById(input_id).value;
+			document.getElementById(input_id + "-badge").innerHTML = new_value;
+			updateImgColour(input_id + "-img", new_value)
+		};
+
+		// adds or removed a class form an image based on a given value
+		// the class controls image colour
+		function updateImgColour(img_id, value){
+			img = document.getElementById(img_id)
+			if (value >= 0.5) {
+				img.classList.remove("not-present");
+				img.classList.add("present");
+			} else {
+				img.classList.remove("present");
+				img.classList.add("not-present");
+			};
+		}
+
+		// toggle if a concept is intevened to be present or not present
+		function toggleConceptSelect(button, input_id) {
+			concept_img = button.children[0];
+			if (concept_img.classList.contains("present")) {
+				concept_img.classList.remove("present");
+				concept_img.classList.add("not-present");
+				document.getElementById(input_id).value = 0;
+				enableBtn(input_id + "-reset");
+				updateValue(input_id);
+			} else {
+				concept_img.classList.remove("not-present");
+				concept_img.classList.add("present");
+				document.getElementById(input_id).value = 1;
+				enableBtn(input_id + "-reset");
+				updateValue(input_id);
+			};
+		};
+	</script>
 
 </main>
 
