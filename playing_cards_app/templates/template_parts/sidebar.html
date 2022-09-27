@@ -1,13 +1,5 @@
 <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse">
 	<div class="position-sticky pt-3">
-		<ul class="nav flex-column">
-			<li class="nav-item h5">
-				<a class="nav-link {{ 'active' if request.endpoint == 'dashboard.dashboard'}}" aria-current="page" href="{{ url_for('dashboard.dashboard') }}">
-					<span data-feather="home"></span>
-					<i class="bi-house-fill"></i> Home
-				</a>
-			</li>
-		</ul>
 		<ul class="nav flex-column mb-2">
 			<li class="nav-item h5">
 				<a class="nav-link {{ 'active' if request.endpoint == 'demo.demo'}}" aria-current="page" href="{{ url_for('demo.demo') }}">

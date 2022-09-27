@@ -6,6 +6,7 @@
 	<div class="bg-white p-3 mt-4">
 		<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3">
 			<h1 class="h2">Results</h1>
+			<button type="button" id="start_walk" class="btn btn-outline-secondary" onclick="startTour()">Start walkthrough</button>
 		</div>
 		<hr/>
 
@@ -16,7 +17,7 @@
 					<div class="row">
 						<div class="col-6">
 							<div class="col-12 m-sm-auto m-md-0">
-								<img class="mb-3" src="{{ url_for('demo.get_image', filename=input) }}" width="100%">
+								<img class="mb-3" src="{{ url_for('demo.get_image', filename=input) }}" width="100%" id="model_input">
 							</div>
 						</div>
 						<div class="col-6">
@@ -34,7 +35,7 @@
 										{% endif %}
 									{% endfor %}
 								</div>
-								<div class="carousel-inner">
+								<div class="carousel-inner" id="present_card_saliency">
 									{% set concept_count = namespace(value=0) %}
 									{% for concept in concepts %}
 										{% if concept[2] > 0.5 %}
@@ -70,7 +71,7 @@
 					</div>
 				</div>
 				<div class="col-6">
-					<div class="card">
+					<div class="card" id="classification_card">
 						<div class="card-header">
 							<h3 class="card-title mb-0">Hand rank</h3>
 						</div>
@@ -81,7 +82,7 @@
 				</div>
 			</div>
 			<h4>Present cards</h4>
-			<div class="row">
+			<div class="row" id="concept_imgs">
 				{% for i_concept in indexed_concepts %}
 					<button class="col-xs-4 col-sm-3 col-md-1 mb-3 border-0 playing_card_btn" onclick="toggleConceptSelect(this, {{ i_concept[0] }})">
 						{% if i_concept[2] > 0.5 %}
@@ -92,32 +93,34 @@
 					</button>
 				{% endfor %}
 			</div>
-			<form method="post" action="{{ url_for('demo.update_results') }}">
-				<div class="collapse" id="intevention">
-					<input type="hidden" id="model_input" value="{{ input }}" name="model_input">
-					{% for concept in concepts %}
-						<p>{{ concept[3] }} <span class="badge rounded-pill bg-secondary" id="{{ concept[0] }}-badge">{{ concept[2]|round(2) }}</span></p>
-						<div class="row">
-							<div class="col-10">
-								<input type="hidden" id="{{ concept[0] }}-initial" value="{{ concept[2]|round(2) }}">
-								<input type="range" class="form-range" min="0" max="1" step="0.01" value="{{ concept[2]|round(2) }}" id="{{ concept[0] }}" name="{{ concept[0] }}" onchange="enableBtn('{{ concept[0] }}-reset'); updateValue('{{ concept[0] }}')">
+			<div>
+				<form method="post" action="{{ url_for('demo.update_results') }}">
+					<div class="collapse" id="intevention">
+						<input type="hidden" id="model_input" value="{{ input }}" name="model_input">
+						{% for concept in concepts %}
+							<p>{{ concept[3] }} <span class="badge rounded-pill bg-secondary" id="{{ concept[0] }}-badge">{{ concept[2]|round(2) }}</span></p>
+							<div class="row">
+								<div class="col-10">
+									<input type="hidden" id="{{ concept[0] }}-initial" value="{{ concept[2]|round(2) }}">
+									<input type="range" class="form-range" min="0" max="1" step="0.01" value="{{ concept[2]|round(2) }}" id="{{ concept[0] }}" name="{{ concept[0] }}" onchange="enableBtn('{{ concept[0] }}-reset'); updateValue('{{ concept[0] }}')">
+								</div>
+								<div class="col-2">
+									<button type="button" class="btn btn-secondary" onclick="resetValue({{ concept[0] }})" id="{{ concept[0] }}-reset" disabled>Reset</button>
+								</div>
 							</div>
-							<div class="col-2">
-								<button type="button" class="btn btn-secondary" onclick="resetValue({{ concept[0] }})" id="{{ concept[0] }}-reset" disabled>Reset</button>
-							</div>
-						</div>
-					{% endfor %}
-				</div>
-				<div class="text-center">
-				<button type="submit" class="btn btn-primary">Re-run concepts</button>
-				</div>
-			</form>
+						{% endfor %}
+					</div>
+					<div class="text-center">
+					<button type="submit" class="btn btn-primary" id="intevene_btn">Evaluate poker hand</button>
+					</div>
+				</form>
+			</div>
 			<div class="text-center">
-				<a class="btn btn-info mb-3" data-bs-toggle="collapse" href="#intevention" role="button" aria-expanded="false" aria-controls="intevention">
+				<a class="btn btn-info mb-3" data-bs-toggle="collapse" href="#intevention" role="button" aria-expanded="false" aria-controls="intevention" id="concept_toggle">
 					Toggle concept details
 				</a>
 			</div>
-			<h4>Saliency maps <i class="bi bi-info-circle-fill text-secondary" title="A saliency map is a heat map showing positive contribution in read and negative contribution in blue"></i></h4>
+			<h4>Saliency maps <i class="bi bi-info-circle-fill text-secondary" title="A saliency map is a heat map showing positive contribution in red and negative contribution in blue"></i></h4>
 
 			{% set concept_slice = 5 %}
 			<div class="accordion" id="saliency_maps">
@@ -230,6 +233,85 @@
 				updateValue(input_id);
 			};
 		};
+
+		const wt = new WebTour();
+		const steps = [
+			{
+				element: '#model_input',            //target element (if not defined then the popover will act like a modal at the center of the screen)
+				title: 'Input image',         //this is option if you don't want to add title
+				content: 'The image that was selected for the artifical agent to process',     //can be string or html string
+				placement: 'bottom-start',       //top, top-start, top-end, left, left-start, left-end, right, right-start, right-end, bottom, bottom-start, bottom-end
+			},
+			{
+				element: '#classification_card',
+				title: 'Hand prediction',
+				content: 'The hand rank the artifical agent predicted',
+				placement: 'left-start',
+			},
+			{
+				element: '#concept_imgs',
+				title: 'Concept predictions',
+				content: 'Cards the artifical agent predicted as present are in full colour and not opaque. Cards not predicted as present are in greyscale in partiily opaque',
+				placement: 'top-start',
+			},
+			{
+				element: '#concept_imgs',
+				title: 'Modifying predictions',
+				content: 'We are able to intevene on the card predictions by clicking on the individual card images. This will set the card to either 100% present or 100% not present.',
+				placement: 'top-start',
+			},
+			{
+				element: '#concept_toggle',
+				title: 'Modifying predictions',
+				content: 'We can expand detials on what the artifical agent predicted for the presence of cards.',
+				placement: 'top-start',
+				onNext: function () {
+					//for dynamic elements - pause and resume onNext action
+					wt.isPaused = true;                 //pause tour
+					wt.showLoader();                    //display a loader
+					document.querySelector('#concept_toggle').click();
+					//wait for the dynamic element
+            const isPresent = setInterval(function(){
+                const nextTarget = document.querySelector('#intevention');
+                if (nextTarget){
+                    clearInterval(isPresent);   //important to prevent your tour to not iterate until end
+                    wt.moveNext();              //go to next step - equivalent to  wt.isPuased = false; wt.next();
+                }
+            }, 100)
+				},
+			},
+			{
+				element: '#intevention',
+				title: 'Modifying predictions',
+				content: 'Each card has a probability of being present between 0% and 100%.',
+				placement: 'top-start',
+
+			},
+			{
+				element: '#intevene_btn',
+				title: 'Update hand rank prediction',
+				content: 'If you have modified the concepts predcted as present, pressing this button will update the artifical agents prediction of the hand rank.',
+				placement: 'top-start',
+			},
+			{
+				element: '#present_card_saliency',
+				title: 'Present card saliency maps',
+				content: 'Saliency maps for cards predicted as present are shown beside the input image',
+				placement: 'bottom',
+			},
+			{
+				element: '#saliency_maps',
+				title: 'Card saliency maps',
+				content: 'All saliency maps are viewable at the bottom of the page. These have been split into the 5 concepts which have the higheset predicted probability of being present, the bottom 5 predicted cards and all card saleicny maps.',
+				placement: 'top-start',
+			},
+		];
+
+		wt.setSteps(steps);
+
+		function startTour() {
+			wt.start();
+		}
 	</script>
 
 </main>

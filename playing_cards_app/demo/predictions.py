@@ -5,7 +5,6 @@ from playing_cards_app.demo.model import End2EndModel
 from playing_cards_app.demo.lrp_converter import convert
 import playing_cards_app.demo.lrp as lrp
 from playing_cards_app.demo.utils import save_image
-from playing_cards_app import celery
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,6 +44,7 @@ class Model():
 
 		XtoCtoY = End2EndModel(num_classes=n_classes, num_concepts=n_concepts, num_images_per_output=n_img_out, use_sigmoid=self.use_sig, use_modulelist=False)
 		XtoCtoY.load_state_dict(torch.load(XtoCtoY_path, map_location=torch.device('cpu')))
+		XtoCtoY.eval()
 		XtoC = convert(XtoCtoY.x_to_c_model)
 
 		XtoC_model_1 = []
@@ -59,13 +59,9 @@ class Model():
 			else:
 				XtoC_model_3.append(m)
 
-		self.XtoC_model_1 = lrp.Sequential(*XtoC_model_1)
-		self.XtoC_model_2 = lrp.Sequential(*XtoC_model_2)
-		self.XtoC_model_3 = lrp.Sequential(*XtoC_model_3)
-
-		self.XtoC_model_1.to(self.device)
-		self.XtoC_model_2.to(self.device)
-		self.XtoC_model_3.to(self.device)
+		self.XtoC_model_1 = lrp.Sequential(*XtoC_model_1).to(self.device)
+		self.XtoC_model_2 = lrp.Sequential(*XtoC_model_2).to(self.device)
+		self.XtoC_model_3 = lrp.Sequential(*XtoC_model_3).to(self.device)
 
 		self.CtoY = XtoCtoY.c_to_y_model.to(self.device)
 
@@ -120,6 +116,8 @@ class Model():
 
 		self.task_out = self.CtoY(c_to_y_input)
 
+		print(c_to_y_input)
+
 	def get_results(self, sort="index"):
 		""" Return model outputs and string conversion
 
@@ -146,8 +144,6 @@ class Model():
 			concept_out.append((idx, self.concept_index_to_string(idx), i, self.concept_index_to_full_name(idx), softmax_score[0][idx].item()))
 
 		indexed_concepts = [(x[0], x[1], x[2]) for x in concept_out]  # concept index, string and value in order of index
-
-		print(sort, "£hsfdhisfdhiosfdio")
 
 		if sort == "index":
 			pass  # no need to sort

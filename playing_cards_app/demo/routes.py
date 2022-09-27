@@ -9,7 +9,10 @@ import os
 from werkzeug.utils import secure_filename
 
 
-CURRENT_MODEL = Model()
+from config import Config  # this is probably a bad way of doing things
+
+
+CURRENT_MODEL = Model(XtoCtoY_path=f"./playing_cards_app/demo/model_saves/{Config.MODEL_NAME}")
 
 
 @bp.route('/demo', methods=["GET", "POST"])
@@ -30,13 +33,11 @@ def upload_files():
 	# Selecting examples from examples folder
 	if "image_file" in request.form and isinstance(request.form["image_file"], str):
 		uploaded_file = cv2.imread(f"{os.path.join('playing_cards_app', 'static', 'examples',request.form['image_file'])}")
-		print(f"{os.path.join('playing_cards_app', 'static', request.form['image_file'])}")
 		filename = secure_filename(request.form["image_file"])
 		save_image(filename, uploaded_file, file_exts=current_app.config['UPLOAD_EXTENSIONS'], folder=current_app.config['UPLOAD_FOLDER'], type="cv2")
 	# uploading file from users device
 	else:
 		uploaded_file = request.files['image_file']
-		print(type(uploaded_file))
 		filename = secure_filename(uploaded_file.filename)
 		save_image(filename, uploaded_file, file_exts=current_app.config['UPLOAD_EXTENSIONS'], folder=current_app.config['UPLOAD_FOLDER'], type="upload")
 	image = "upload"
@@ -76,8 +77,9 @@ def results():
 @bp.route('/update_results', methods=['POST'])
 def update_results():
 	# model_input is not included in the new concept vector
-	new_concepts = [float(request.form.get(x)) if x != "model_input" else None for x in request.form][1:]
-	CURRENT_MODEL.predict(concepts=new_concepts)
+	new_concepts = [(int(x), float(request.form.get(x))) if x != "model_input" else None for x in request.form][1:]
+	new_concepts = sorted(new_concepts, key=lambda x: x[0])  # ensure concepts are in index order
+	CURRENT_MODEL.predict(concepts=[x[1] for x in new_concepts])
 	task_out, task_desc, concept_out, indexed_concepts = CURRENT_MODEL.get_results(sort=current_app.config['CONCEPT_SORT'])
 
 	return render_template('demo/results.html', title='Results', input=CURRENT_MODEL.input_name, concepts=concept_out, task_desc=task_desc, task_out=task_out, indexed_concepts=indexed_concepts)

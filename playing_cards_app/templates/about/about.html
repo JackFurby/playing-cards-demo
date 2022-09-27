@@ -5,11 +5,65 @@
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
 	<div class="bg-white p-3 mt-4">
 		<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3">
-			<h1 class="h2">About</h1>
+			<h1 class="h2">About the research</h1>
 		</div>
 		<hr/>
 
 		<div class="row">
+			<h2>Background</h2>
+				<p>If we were to deploy a machine to perform a task alongside a human as part of a human-machine team it may be expected for the machine to include extra capabilities to improve the team's overall performance. To design these capabilities we can look at the social sciences and in particular at mental models which humans are known to create of their surroundings and are then used for future interactions. Bearing this in mind when designing an Artificial intelligence (AI) agent we can architect the artificial agent to help a human interacting with the machine to build an accurate mental model of it. This work combines an AI architecture, Concept Bottleneck Models, and an explainability technique, Layer-wise Relevancy Propagation, to improve human-machine collaboration.</p>
+
+				<h3>Concept Bottleneck models</h3>
+
+				<p>The type of AI we are focusing on is based on a Deep Neural Network (DNN) which is a way of mimicking the neurons of a brain. A DNN can be trained for a given task without explicit programming. once trained, a DNN will typically accept an input, such as an image, and predict an output. Concept Bottleneck Models (CBMs) are similar to this and are still a version of a DNN. They differ however as they make final predictions from an intermediate output of predicted concepts, such as the AI predicts a Mallard duck because it believes the input image is of a bird with brown feathers and an orange beak. This, therefore, means their decision-making has the potential to match a human decision-making process if we consider a human to identify objects by first breaking them down into sub-components, and adds the ability for a human to intervene on the artificial agent's prediction.</p>
+
+				<h3>Explainable AI</h3>
+
+				<p>Explainable AI is a series of techniques to reveal the underlying causes leading to an AI's output. Explanations can take a number of forms although for our work we are using visuals in the form of saliency maps. These show the input features that positively or negatively contribute to a prediction in a heatmap. Positive contribution is 'hot' and displayed in red while negative contribution is 'cold' and therefore is shown in blue.</p>
+				<p>The particular technique we are using is called Layer-wise Relevance Propagation which uses the underlying structure of a DNN to generate explanations and has been considered to produce explanations that group input features. When combined with CBMs we see this as a benefit as a group of input features may align with the concepts that the artificial agent predicts.</p>
+		</div>
+
+		<div class="row">
+			<h2 class="h2">Setting the scene</h2>
+				<p>We have trained and deployed an artificial agent to classify playing cards hands in the game Three card poker. It cannot play the game but can classify hands and recognise the presence of individual playing cards.</p>
+
+				<p>Upon inputting an input image, this demo accepts both pictures from a live camera or by user upload, the artificial agent will output the cards it believes were present and a predicted hand rank. If a human is happy with the results they do not need to do anything else but in the event, they disagree with the output they can view saliency maps for concept relevance and intervene on the model concept prediction to explore if that changes the predicted hand rank.</p>
+
+				<p>We used the task of classifying poker hands in this demo but that does not limit this work to just that domain. Concept bottleneck models can be applied to any task where a set of concepts can be learned and mapped to task classes. This has been demonstrated with birds and medical imaging. Our work helps to enable to use of CBMs in settings with human interaction, either helping a human to build a better mental model of the artificial agent or allowing a technician to debug a model and recognise potential weaknesses.</p>
+
+
+
+
+
+		<div class="row">
+			<h2 class="h2">Try out the demo for yourself</h2>
+			<div class="col-xs-10 col-sm-10 col-md-10 col-lg-6 m-auto">
+				<img class="mb-3" src="{{ url_for('demo.video_feed') }}" width="100%">
+				<form method="post" action="{{ url_for('demo.demo') }}">
+					<button type="submit" class="btn btn-outline-primary" name="submit" value="picture"><i class="bi-camera-fill"></i> Take picture</button>
+				</form>
+				<hr />
+				<form method="post" action="{{ url_for('demo.upload_files') }}" enctype="multipart/form-data">
+					<p><input type="file" class="form-control" name="image_file" accept="image/*" required></p>
+					<button type="submit" class="btn btn-outline-primary" name="submit"><i class="bi-image"></i> Upload image</button>
+				</form>
+			</div>
+			{% if examples != None %}
+			<div class="col-12">
+				<h2>Example images</h2>
+				<hr/>
+				<div class="row">
+					{% for example in examples %}
+					<form method="post" class="col-xs-12 col-sm-6 col-md-4 col-lg-3" action="{{ url_for('demo.upload_files') }}" enctype="multipart/form-data">
+						<input type="hidden" class="form-control" name="image_file" value={{ example }}>
+						<button type="submit" class="mb-3 p-0 border-0" name="submit">
+							<img type="submit" class="" src="{{ url_for('static', filename='examples/' + example) }}" width="100%">
+						</button>
+					</form>
+					{% endfor %}
+				</div>
+			</div>
+			{% endif %}
 		</div>
 
 		<br/>

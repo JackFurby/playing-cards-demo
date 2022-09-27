@@ -1,6 +1,10 @@
 <html>
 	<head>
 		<link href="{{ url_for('static', filename='css/style.scss.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='css/webtour.min.css') }}" rel="stylesheet" type="text/css">
+
+		<script type=text/javascript src="{{url_for('static', filename='js/jquery.min.js') }}"></script>
+		<script type=text/javascript src="{{url_for('static', filename='js/webtour.min.js') }}"></script>
 
 		{% if title %}
 		<title>{{ title }} - Explainable Concept Bottleneck Models demo</title>

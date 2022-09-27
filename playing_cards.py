@@ -1,5 +1,4 @@
-from playing_cards_app import create_app, init_celery, celery
+from playing_cards_app import create_app
 
 
 app = create_app()
-init_celery(celery, app)

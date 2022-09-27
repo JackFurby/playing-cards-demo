@@ -5,7 +5,6 @@ import os
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from playing_cards_app import celery
 
 
 def get_camera(device="<video0>"):
