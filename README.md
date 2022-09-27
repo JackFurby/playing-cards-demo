@@ -1,4 +1,10 @@
-# playing_cards_demo
+# playing cards demo
+
+Please see the Wiki for details about setup and running the application.
+
+
+
+
 CBM demo for playing card recognition
 
 
