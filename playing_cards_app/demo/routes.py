@@ -14,7 +14,7 @@ from config import Config  # this is probably a bad way of doing things
 
 CURRENT_MODEL = Model(XtoCtoY_path=f"./playing_cards_app/demo/model_saves/{Config.MODEL_NAME}")
 
-
+@bp.route('/', methods=["GET", "POST"])
 @bp.route('/demo', methods=["GET", "POST"])
 def demo():
 	if request.method == 'GET' or request.form["submit"] == "reset":
