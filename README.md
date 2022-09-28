@@ -1,15 +1,9 @@
-# playing_cards_demo
-CBM demo for playing card recognition
+# Playing cards demo
 
+Please see the Wiki for details about setup and running the application.
 
-sudo apt-get install redis-server
+This repository contains a demo for use with a Concept Bottleneck Model [1] trained to recognise playing cards and classify hand ranks in the game Three card poker. Please see [here](https://github.com/JackFurby/Playing-cards-CBM) for model training.
 
-flask --app playing_cards --debug run
+## References
 
-
-celery -A playing_cards.celery worker
-
-
-docker build --tag playing-cards-demo .
-
-docker run -p 5000:5000 playing-cards-demo
+[1] Koh, P. W.; Nguyen, T.; Tang, Y. S.; Mussmann, S.; Pierson,E.; Kim, B.; and Liang, P. 2020.  Concept Bottleneck Mod-els. In III, H. D.; and Singh, A., eds.,Proceedings of the 37thInternational Conference on Machine Learning, volume 119ofProceedings of Machine Learning Research, 5338–5348.PMLR.
