@@ -116,8 +116,6 @@ class Model():
 
 		self.task_out = self.CtoY(c_to_y_input)
 
-		print(c_to_y_input)
-
 	def get_results(self, sort="index"):
 		""" Return model outputs and string conversion
 

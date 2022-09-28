@@ -81,7 +81,7 @@
 					</div>
 				</div>
 			</div>
-			<h4>Present cards</h4>
+			<h4>Predicted cards</h4>
 			<div class="row" id="concept_imgs">
 				{% for i_concept in indexed_concepts %}
 					<button class="col-xs-4 col-sm-3 col-md-1 mb-3 border-0 playing_card_btn" onclick="toggleConceptSelect(this, {{ i_concept[0] }})">
@@ -216,7 +216,7 @@
 			};
 		}
 
-		// toggle if a concept is intevened to be present or not present
+		// toggle if a concept is intervened to be present or not present
 		function toggleConceptSelect(button, input_id) {
 			concept_img = button.children[0];
 			if (concept_img.classList.contains("present")) {
@@ -226,44 +226,51 @@
 				enableBtn(input_id + "-reset");
 				updateValue(input_id);
 			} else {
-				concept_img.classList.remove("not-present");
-				concept_img.classList.add("present");
-				document.getElementById(input_id).value = 1;
-				enableBtn(input_id + "-reset");
-				updateValue(input_id);
+				// only allow if less than 3 cards are set as present
+				if (countPresentCards() < 3) {
+					concept_img.classList.remove("not-present");
+					concept_img.classList.add("present");
+					document.getElementById(input_id).value = 1;
+					enableBtn(input_id + "-reset");
+					updateValue(input_id);
+				}
 			};
 		};
 
+		// return the number of image elements with the class present
+		function countPresentCards() {
+			return document.querySelectorAll('img.present').length;
+		}
 		const wt = new WebTour();
 		const steps = [
 			{
 				element: '#model_input',            //target element (if not defined then the popover will act like a modal at the center of the screen)
 				title: 'Input image',         //this is option if you don't want to add title
-				content: 'The image that was selected for the artifical agent to process',     //can be string or html string
+				content: 'The image that was selected for the artificial agent to process.',     //can be string or html string
 				placement: 'bottom-start',       //top, top-start, top-end, left, left-start, left-end, right, right-start, right-end, bottom, bottom-start, bottom-end
 			},
 			{
 				element: '#classification_card',
 				title: 'Hand prediction',
-				content: 'The hand rank the artifical agent predicted',
+				content: 'The hand rank the artificial agent predicted.',
 				placement: 'left-start',
 			},
 			{
 				element: '#concept_imgs',
 				title: 'Concept predictions',
-				content: 'Cards the artifical agent predicted as present are in full colour and not opaque. Cards not predicted as present are in greyscale in partiily opaque',
+				content: 'Cards the artificial agent predicted as present are in full colour and not opaque. Cards not predicted as present are in greyscale in partially opaque.',
 				placement: 'top-start',
 			},
 			{
 				element: '#concept_imgs',
 				title: 'Modifying predictions',
-				content: 'We are able to intevene on the card predictions by clicking on the individual card images. This will set the card to either 100% present or 100% not present.',
+				content: 'Card predictions can be intervened by clicking on the individual card images. This will set the card to either 100% present or 100% not present.',
 				placement: 'top-start',
 			},
 			{
 				element: '#concept_toggle',
 				title: 'Modifying predictions',
-				content: 'We can expand detials on what the artifical agent predicted for the presence of cards.',
+				content: 'Concept details can be expanded to view the exact artifical agent concept predictions. These can also adjusted.',
 				placement: 'top-start',
 				onNext: function () {
 					//for dynamic elements - pause and resume onNext action
@@ -271,13 +278,13 @@
 					wt.showLoader();                    //display a loader
 					document.querySelector('#concept_toggle').click();
 					//wait for the dynamic element
-            const isPresent = setInterval(function(){
-                const nextTarget = document.querySelector('#intevention');
-                if (nextTarget){
-                    clearInterval(isPresent);   //important to prevent your tour to not iterate until end
-                    wt.moveNext();              //go to next step - equivalent to  wt.isPuased = false; wt.next();
-                }
-            }, 100)
+					const isPresent = setInterval(function(){
+						const nextTarget = document.querySelector('#intevention');
+						if (nextTarget){
+							clearInterval(isPresent);   //important to prevent your tour to not iterate until end
+							wt.moveNext();              //go to next step - equivalent to  wt.isPuased = false; wt.next();
+						}
+					}, 100)
 				},
 			},
 			{
@@ -290,19 +297,19 @@
 			{
 				element: '#intevene_btn',
 				title: 'Update hand rank prediction',
-				content: 'If you have modified the concepts predcted as present, pressing this button will update the artifical agents prediction of the hand rank.',
+				content: 'If the concept predictions are modified, pressing this button will update the artificial agents prediction of the hand rank.',
 				placement: 'top-start',
 			},
 			{
 				element: '#present_card_saliency',
 				title: 'Present card saliency maps',
-				content: 'Saliency maps for cards predicted as present are shown beside the input image',
+				content: 'Saliency maps for cards predicted as present are shown beside the input image.',
 				placement: 'bottom',
 			},
 			{
 				element: '#saliency_maps',
 				title: 'Card saliency maps',
-				content: 'All saliency maps are viewable at the bottom of the page. These have been split into the 5 concepts which have the higheset predicted probability of being present, the bottom 5 predicted cards and all card saleicny maps.',
+				content: 'All saliency maps are viewable at the bottom of the page. These have been split into the 5 concepts which have the highest predicted probability of being present, the bottom 5 predicted cards and all card saliency maps.',
 				placement: 'top-start',
 			},
 		];
