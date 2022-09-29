@@ -6,8 +6,6 @@ import playing_cards_app.forms
 import logging
 
 
-
-
 def create_app(config_class=Config):
 	"""
 	Construct Flash application without a global variable. This make it easier

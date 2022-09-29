@@ -129,6 +129,8 @@ dmypy.json
 .pyre/
 
 # extra
-playing_cards_app/static/css/
+playing_cards_app/static/css/bootstrap/
+playing_cards_app/static/css/style.scss.css
+playing_cards_app/static/css/style.scss.css.map
 playing_cards_app/uploads/
 playing_cards_app/demo/model_saves/
