@@ -40,10 +40,12 @@ def gen_frames(device):
 	return:
 		Video stream
 	"""
+	global latest_frame
 	camera, cv2_capture = get_camera(device=device)
 	delay = 1 / 30  # 30 fps
 	while True:
 		frame = get_frame(camera, cv2_capture)
+		latest_frame = frame
 		ret, buffer = cv2.imencode('.jpg', frame)
 		frame = buffer.tobytes()
 		time.sleep(delay)
@@ -60,9 +62,10 @@ def get_picture(device):
 	return:
 		image as cv2 array
 	"""
-	time.sleep(0.3)  # make sure the camera is available (may be used by stream before taking picture)
-	camera, cv2_capture = get_camera(device=device)
-	return get_frame(camera, cv2_capture)
+	return latest_frame
+	#time.sleep(1.5)  # make sure the camera is available (may be used by stream before taking picture)
+	#camera, cv2_capture = get_camera(device=device)
+	#return get_frame(camera, cv2_capture)
 
 
 def get_frame(camera, cv2_capture=False):
